@@ -1,0 +1,25 @@
+{
+    "author": "Sebastiaan Huber",
+    "author_email": "mail@sphuber.net",
+    "classifiers": [
+        "Development Status :: 4 - Development",
+        "Framework :: AiiDA",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8"
+    ],
+    "description": "CLI for the SDB project",
+    "entry_points": {
+        "console_scripts": [
+            "aiida-sdb = aiida_sdb.cli:cmd_root"
+        ]
+    },
+    "install_requires": [
+        "click>=7.0",
+        "click-completion>=0.5.1"
+    ],
+    "name": "aiida_sdb",
+    "version": "0.1.0"
+}
