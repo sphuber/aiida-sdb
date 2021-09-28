@@ -17,6 +17,7 @@ from . import cmd_launch
 @click.option('-K', '--importer-api-key', type=click.STRING, required=False, help='Optional API key for the database.')
 @options.DRY_RUN()
 @decorators.with_dbenv()
+@click.pass_context
 def cif_import(ctx, database, max_number_species, importer_api_key, dry_run):
     """Import structures from an external database.
 
@@ -33,7 +34,7 @@ def cif_import(ctx, database, max_number_species, importer_api_key, dry_run):
 
     from datetime import datetime
     from aiida.orm import Group
-    from aiida_codtools.cli.misc.cif_import import launch_cif_import
+    from aiida_codtools.cli.data.cif import launch_cif_import
 
     directory = database
     filepath = '{}.log'.format(os.path.join(database, datetime.utcnow().strftime('%Y%m%d')))
