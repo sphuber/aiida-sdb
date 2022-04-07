@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-# yapf:disable
 """Command to launch the CIF importing step of the project workflow."""
-import click
-
 from aiida.cmdline.params import options
 from aiida.cmdline.utils import decorators, echo
+import click
 
 from . import cmd_launch
 
@@ -12,8 +10,13 @@ from . import cmd_launch
 @cmd_launch.command('import')
 @click.argument('database', type=click.Choice(['cod', 'icsd', 'mpds']), required=True)
 @click.option(
-    '-m', '--max-number-species', type=click.INT, default=30, show_default=True,
-    help='Import only files with at most this number of different species.')
+    '-m',
+    '--max-number-species',
+    type=click.INT,
+    default=30,
+    show_default=True,
+    help='Import only files with at most this number of different species.'
+)
 @click.option('-K', '--importer-api-key', type=click.STRING, required=False, help='Optional API key for the database.')
 @options.DRY_RUN()
 @decorators.with_dbenv()
@@ -28,16 +31,16 @@ def cif_import(ctx, database, max_number_species, importer_api_key, dry_run):
     rerunning this script, any new CIF files that have been added to the external database since the last import will be
     simply added to the group.
     """
+    from datetime import datetime
     import errno
     import os
     import sys
 
-    from datetime import datetime
     from aiida.orm import Group
     from aiida_codtools.cli.data.cif import launch_cif_import
 
     directory = database
-    filepath = '{}.log'.format(os.path.join(database, datetime.utcnow().strftime('%Y%m%d')))
+    filepath = f"{os.path.join(database, datetime.utcnow().strftime('%Y%m%d'))}.log"
 
     try:
         os.makedirs(directory)
@@ -46,9 +49,9 @@ def cif_import(ctx, database, max_number_species, importer_api_key, dry_run):
             raise
 
     if os.path.isfile(filepath):
-        echo.echo_critical('file `{}` already exists, delete it first if you want to continue'.format(filepath))
+        echo.echo_critical(f'file `{filepath}` already exists, delete it first if you want to continue')
 
-    group_cif_raw = Group.get(label='{database}/cif/raw'.format(database=database))
+    group_cif_raw = Group.get(label=f'{database}/cif/raw')
 
     if database == 'cod':
         inputs_database_specific = {}
@@ -60,15 +63,13 @@ def cif_import(ctx, database, max_number_species, importer_api_key, dry_run):
             'importer_db_password': 'sql',
         }
     elif database == 'mpds':
-        inputs_database_specific = {
-            'importer_api_key': importer_api_key
-        }
+        inputs_database_specific = {'importer_api_key': importer_api_key}
 
         if max_number_species > 5:
             # Anything above `quinary` will be translated to `multinary`
             max_number_species = 6
 
-    with open(filepath, 'w') as handle:
+    with open(filepath, 'w', encoding='utf-8') as handle:
 
         sys.stdout = handle
 

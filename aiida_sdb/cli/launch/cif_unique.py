@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-# yapf:disable
 """Command to launch the CIF uniqueness analysis step of the project workflow."""
-import click
-
-from aiida.cmdline.params import arguments, options
+from aiida.cmdline.params import arguments
 from aiida.cmdline.utils import decorators, echo
+import click
 
 from . import cmd_launch
 
@@ -12,10 +10,15 @@ from . import cmd_launch
 @cmd_launch.command('unique')
 @arguments.GROUP('group_candidate', required=True)
 @arguments.GROUP('group_reference', required=True)
-@click.option('--partial-occupancies/--no-partial-occupancies', default=None,
-    help='Filter structures for partial occupancies.')
-@click.option('--add/--no-add', is_flag=True, default=False,
-    help='Toggle whether to add the new unique prototypes to the reference group.')
+@click.option(
+    '--partial-occupancies/--no-partial-occupancies', default=None, help='Filter structures for partial occupancies.'
+)
+@click.option(
+    '--add/--no-add',
+    is_flag=True,
+    default=False,
+    help='Toggle whether to add the new unique prototypes to the reference group.'
+)
 @decorators.with_dbenv()
 def cif_unique(group_candidate, group_reference, partial_occupancies, add):
     """Perform a uniqueness analysis between groups of structures.
@@ -23,12 +26,12 @@ def cif_unique(group_candidate, group_reference, partial_occupancies, add):
     The structures of GROUP_CANDIDATE are compared against those of GROUP_REFERENCE.
     """
     import collections
-    from numpy import eye, where
-    from pymatgen.analysis.structure_matcher import StructureMatcher
-    from scipy.sparse.csgraph import connected_components
 
     from aiida import orm
     from aiida.manage.manager import get_manager
+    from numpy import eye, where
+    from pymatgen.analysis.structure_matcher import StructureMatcher
+    from scipy.sparse.csgraph import connected_components
 
     ltol = 0.2
     stol = 0.3
@@ -49,12 +52,12 @@ def cif_unique(group_candidate, group_reference, partial_occupancies, add):
     if partial_occupancies is not None:
         filters['extras.partial_occupancies'] = partial_occupancies
 
-    builder_candidate = orm.QueryBuilder().append(
-        orm.Group, filters={'id': group_candidate.id}, tag='group').append(
-        orm.StructureData, with_group='group', filters=filters)
+    builder_candidate = orm.QueryBuilder().append(orm.Group, filters={
+        'id': group_candidate.id
+    }, tag='group').append(orm.StructureData, with_group='group', filters=filters)
 
     count = builder_candidate.count()
-    label = 'Mapping structures of {}'.format(group_candidate.label)
+    label = f'Mapping structures of {group_candidate.label}'
 
     # Map all structures that are in the candidate group on reduced chemical formula
     with click.progressbar(label=label, length=count, show_pos=True) as progress:
@@ -64,12 +67,12 @@ def cif_unique(group_candidate, group_reference, partial_occupancies, add):
             mapping[formula].append([len(node.sites), node.uuid, node])
             new_structures.append(node)
 
-    builder_reference = orm.QueryBuilder().append(
-        orm.Group, filters={'id': group_reference.id}, tag='group').append(
-        orm.StructureData, with_group='group', filters=filters)
+    builder_reference = orm.QueryBuilder().append(orm.Group, filters={
+        'id': group_reference.id
+    }, tag='group').append(orm.StructureData, with_group='group', filters=filters)
 
     count = builder_reference.count()
-    label = 'Mapping structures of {}'.format(group_reference.label)
+    label = f'Mapping structures of {group_reference.label}'
     candidate_formulas = list(mapping.keys())
 
     # Map all structures that are in the unique group on reduced chemical formula
@@ -100,12 +103,17 @@ def cif_unique(group_candidate, group_reference, partial_occupancies, add):
         try:
             return int(matcher.fit(structure_i.get_pymatgen_structure(), structure_j.get_pymatgen_structure()))
         except TypeError:
-            echo.echo_info('could not match the structures {} and {}'.format(structure_i.uuid, structure_j.uuid))
+            echo.echo_info(f'could not match the structures {structure_i.uuid} and {structure_j.uuid}')
             return 0
 
     matcher = StructureMatcher(
-        ltol=ltol, stol=stol, angle_tol=angle_tol, scale=scale,
-        primitive_cell=primitive_cell, attempt_supercell=attempt_supercell)
+        ltol=ltol,
+        stol=stol,
+        angle_tol=angle_tol,
+        scale=scale,
+        primitive_cell=primitive_cell,
+        attempt_supercell=attempt_supercell
+    )
 
     label = 'Uniqueness analysis for each compound'
     with click.progressbar(label=label, length=len(ordered), show_pos=True) as progress:
@@ -158,6 +166,6 @@ def cif_unique(group_candidate, group_reference, partial_occupancies, add):
 
     if add:
         group_reference.backend_entity.add_nodes([node.backend_entity for node in unique_references], skip_orm=True)
-        echo.echo_success('Added {} new unique references to Group<{}>'.format(added, group_reference.label))
+        echo.echo_success(f'Added {added} new unique references to Group<{group_reference.label}>')
     else:
-        echo.echo_success('Found {} new unique references'.format(added))
+        echo.echo_success(f'Found {added} new unique references')

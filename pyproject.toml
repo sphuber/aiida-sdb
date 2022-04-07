@@ -21,7 +21,8 @@ classifiers = [
 keywords = ['aiida', 'workflows']
 requires-python = '>=3.8'
 dependencies = [
-    'aiida-core[atomic_tools]~=2.0',
+    'aiida-core[atomic_tools]~=2.0.0b1',
+    'aiida-codtools~=3.0',
     'click~=8.0',
     'numpy',
     'scipy',
@@ -35,6 +36,7 @@ Source = 'https://github.com/sphuber/aiida-sdb'
 dev = [
     'pre-commit~=2.17',
     'pylint~=2.12.2',
+    'pylint-aiida~=0.1',
     'toml'
 ]
 
@@ -59,8 +61,12 @@ ignore = [
     'D104',
     'D202',
     'D203',
-    'D213'
+    'D213',
+    'D301',
 ]
+
+[tool.pylint.basic]
+good-names = ['i', 'j', 'db']
 
 [tool.pylint.master]
 load-plugins = ['pylint_aiida']
@@ -73,6 +79,10 @@ disable = [
     'bad-continuation',
     'duplicate-code',
     'import-outside-toplevel',
+    'too-many-arguments',
+    'too-many-branches',
+    'too-many-locals',
+    'too-many-statements',
 ]
 
 [tool.yapf]
