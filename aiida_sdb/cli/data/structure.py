@@ -103,6 +103,11 @@ def cmd_mark(force):
 @click.argument('database', type=click.Choice(['cod', 'icsd', 'mpds']), required=True)
 @decorators.with_dbenv()
 def cmd_add_source(database):
+    """Copy the source attribute from the original `CifData` to the cleaned and primitivized `StructureData`.
+
+    This is necessary for the uniqueness script that needs to classify the structures based on the external source
+    database.
+    """
     from aiida import orm
 
     group_label = '{}/structure/primitive'.format(database)
