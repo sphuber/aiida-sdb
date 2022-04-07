@@ -15,5 +15,6 @@ click_completion.init()
 def cmd_root(profile):  # pylint: disable=unused-argument
     """CLI for the SDB project."""
 
+from .analyse import *
 from .data import *
 from .launch import *
