@@ -189,11 +189,13 @@ def cmd_add_source(database):
     '--partial-occupancies/--no-partial-occupancies', default=None, help='Filter structures for partial occupancies.'
 )
 @click.option('--no-cod-hydrogen', is_flag=True, help='Filter structures from the COD containing hydrogen.')
+@click.option('--count-only', is_flag=True, help='Only count the number of uniques.')
 @decorators.with_dbenv()
 def cmd_uniques(
-    group, databases, not_elements, elements, max_atoms, number_species, partial_occupancies, no_cod_hydrogen
+    group, databases, not_elements, elements, max_atoms, number_species, partial_occupancies, no_cod_hydrogen,
+    count_only
 ):
-    """Pass."""
+    """Print a table of unique formulas with some properties usch as number of atoms and source identifier."""
     from aiida import orm
     from tabulate import tabulate
 
@@ -235,7 +237,10 @@ def cmd_uniques(
         'id': group.id
     }, tag='group').append(orm.StructureData, with_group='group', filters=filters)
 
-    echo.echo_report(f'{builder.count()}')
+    echo.echo(f'{builder.count()}')
+
+    if count_only:
+        return
 
     rows = []
     for [structure] in builder.iterall():
