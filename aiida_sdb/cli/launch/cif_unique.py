@@ -12,13 +12,12 @@ from . import cmd_launch
 @cmd_launch.command('unique')
 @arguments.GROUP('group_candidate', required=True)
 @arguments.GROUP('group_reference', required=True)
-@options.VERBOSE()
 @click.option('--partial-occupancies/--no-partial-occupancies', default=None,
     help='Filter structures for partial occupancies.')
 @click.option('--add/--no-add', is_flag=True, default=False,
     help='Toggle whether to add the new unique prototypes to the reference group.')
 @decorators.with_dbenv()
-def cif_unique(group_candidate, group_reference, verbose, partial_occupancies, add):
+def cif_unique(group_candidate, group_reference, partial_occupancies, add):
     """Perform a uniqueness analysis between groups of structures.
 
     The structures of GROUP_CANDIDATE are compared against those of GROUP_REFERENCE.
@@ -101,8 +100,7 @@ def cif_unique(group_candidate, group_reference, verbose, partial_occupancies, a
         try:
             return int(matcher.fit(structure_i.get_pymatgen_structure(), structure_j.get_pymatgen_structure()))
         except TypeError:
-            if verbose:
-                echo.echo_warning('could not match the structures {} and {}'.format(structure_i.uuid, structure_j.uuid))
+            echo.echo_info('could not match the structures {} and {}'.format(structure_i.uuid, structure_j.uuid))
             return 0
 
     matcher = StructureMatcher(

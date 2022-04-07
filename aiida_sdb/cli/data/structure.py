@@ -157,10 +157,9 @@ def cmd_add_source(database):
     help='Filter structures for partial occupancies.')
 @click.option('--no-cod-hydrogen', is_flag=True,
     help='Filter structures from the COD containing hydrogen.')
-@options.VERBOSE()
 @decorators.with_dbenv()
 def cmd_uniques(
-    group, databases, not_elements, elements, max_atoms, number_species, partial_occupancies, no_cod_hydrogen, verbose
+    group, databases, not_elements, elements, max_atoms, number_species, partial_occupancies, no_cod_hydrogen
 ):
     """Pass."""
     from tabulate import tabulate
@@ -204,14 +203,13 @@ def cmd_uniques(
         orm.Group, filters={'id': group.id}, tag='group').append(
         orm.StructureData, with_group='group', filters=filters)
 
-    if not verbose:
-        echo.echo('{}'.format(builder.count()))
-    else:
-        rows = []
-        for [structure] in builder.iterall():
-            rows.append((structure.get_formula(), len(structure.kinds), len(structure.sites), structure.uuid, structure.get_extra('source')['id']))
+    echo.echo_report('{}'.format(builder.count()))
 
-        echo.echo(tabulate(rows, headers=['Formula', '# species', '# atoms', 'UUID', 'Source identifier']))
+    rows = []
+    for [structure] in builder.iterall():
+        rows.append((structure.get_formula(), len(structure.kinds), len(structure.sites), structure.uuid, structure.get_extra('source')['id']))
+
+    echo.echo(tabulate(rows, headers=['Formula', '# species', '# atoms', 'UUID', 'Source identifier']))
 
 
 @cmd_structure.command('export')
