@@ -199,7 +199,7 @@ def cmd_uniques(
     from aiida import orm
     from tabulate import tabulate
 
-    filters = {'and': []}
+    filters = {'and': [{'extras': {'!has_key': 'incorrect_formula'}}]}
 
     if not group and not databases:
         raise click.BadParameter('need at least a GROUP or `--databases` to be specified')
