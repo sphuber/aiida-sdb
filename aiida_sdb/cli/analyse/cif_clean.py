@@ -8,7 +8,7 @@ import tabulate
 
 from . import cmd_analyse
 
-DATABASES = ['cod', 'icsd', 'mpds']
+DATABASES = ('cod', 'icsd', 'mpds')
 
 
 @cmd_analyse.command('cif-clean')
@@ -26,7 +26,13 @@ DATABASES = ['cod', 'icsd', 'mpds']
     default='plain',
     help='Format to use for printing the final table.'
 )
-def cmd_cif_clean(database, fmt):
+@click.option(
+    '--filter-extras',
+    type=click.STRING,
+    multiple=True,
+    help='Filter out `CifData` nodes that have these tags in their extras.'
+)
+def cmd_cif_clean(database, fmt, filter_extras):
     """Print table overview of the exit statuses of completed ``CifCleanWorkChains`` for the various databases."""
     from aiida import orm
     from aiida.plugins import WorkflowFactory
@@ -43,7 +49,13 @@ def cmd_cif_clean(database, fmt):
 
         builder = orm.QueryBuilder()
         builder.append(orm.Group, filters={'label': group_workchain_clean.label}, tag='group')
-        builder.append(orm.WorkChainNode, project=['attributes.exit_status'], with_group='group')
+        builder.append(orm.WorkChainNode, project='attributes.exit_status', with_group='group', tag='wc')
+
+        if filter_extras:
+            filters = {'extras': {'and': []}}
+            for tag in filter_extras:
+                filters['extras']['and'].append({'!has_key': tag})
+            builder.append(orm.CifData, with_incoming='wc', filters=filters)
 
         counter = collections.Counter(builder.all(flat=True))
         counters.append(counter)
