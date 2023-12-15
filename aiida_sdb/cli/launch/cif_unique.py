@@ -11,6 +11,14 @@ from . import cmd_launch
 @arguments.GROUP('group_candidate', required=True)
 @arguments.GROUP('group_reference', required=True)
 @click.option(
+    '--contains', default=None,
+    help='Filter structures for a specific chemical formula.'
+)
+@click.option(
+    '--max-size', default=None,
+    help='Filter structures for a maximum number of atoms.'
+)
+@click.option(
     '--partial-occupancies/--no-partial-occupancies', default=None, help='Filter structures for partial occupancies.'
 )
 @click.option(
@@ -20,7 +28,7 @@ from . import cmd_launch
     help='Toggle whether to add the new unique prototypes to the reference group.'
 )
 @decorators.with_dbenv()
-def cif_unique(group_candidate, group_reference, partial_occupancies, add):
+def cif_unique(group_candidate, group_reference, contains, max_size, partial_occupancies, add):
     """Perform a uniqueness analysis between groups of structures.
 
     The structures of GROUP_CANDIDATE are compared against those of GROUP_REFERENCE.
@@ -39,6 +47,7 @@ def cif_unique(group_candidate, group_reference, partial_occupancies, add):
     scale = True
     primitive_cell = False
     attempt_supercell = False
+    max_size = int(max_size) if max_size is not None else None
 
     mapping = collections.defaultdict(list)
     ordered = collections.OrderedDict()
@@ -47,17 +56,23 @@ def cif_unique(group_candidate, group_reference, partial_occupancies, add):
     reference_uuids = []
     new_structures = []
 
-    filters = {}
+    filters = {'and': []}
 
     if partial_occupancies is not None:
-        filters['extras.partial_occupancies'] = partial_occupancies
+        filters['and'].append({'extras.partial_occupancies': partial_occupancies})
+
+    if contains is not None:
+        filters['and'].append({'extras.formula_hill': {'like': rf'%{contains}%'}})
+    
+    if max_size is not None:
+        filters['and'].append({'extras.number_of_sites': {'<=': max_size}})
 
     builder_candidate = orm.QueryBuilder().append(orm.Group, filters={
         'id': group_candidate.id
     }, tag='group').append(orm.StructureData, with_group='group', filters=filters)
 
     count = builder_candidate.count()
-    label = f'Mapping structures of {group_candidate.label}'
+    label = f'Mapping {count} structures of {group_candidate.label}'
 
     # Map all structures that are in the candidate group on reduced chemical formula
     with click.progressbar(label=label, length=count, show_pos=True) as progress:
