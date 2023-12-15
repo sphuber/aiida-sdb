@@ -4,10 +4,6 @@
 from .. import cmd_root
 
 
-@cmd_root.group('analyse')
+@cmd_root.group("analyse")
 def cmd_analyse():
     """Commands to analyse the contents of the database."""
-
-
-# Import the sub commands to register them with the CLI
-from .cif_clean import *

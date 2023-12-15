@@ -6,7 +6,11 @@ from aiida.cmdline.groups import VerdiCommandGroup
 from .. import cmd_root
 
 
-@cmd_root.group('launch', cls=VerdiCommandGroup, context_settings={'help_option_names': ['-h', '--help']})
+@cmd_root.group(
+    "launch",
+    cls=VerdiCommandGroup,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 def cmd_launch():
     """Commands to launch the various workflow steps of the project.
 
@@ -20,6 +24,3 @@ def cmd_launch():
 
 
 # Import the sub commands to register them with the CLI
-from .cif_clean import cif_clean
-from .cif_import import cif_import
-from .cif_unique import cif_unique

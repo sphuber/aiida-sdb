@@ -2,35 +2,35 @@
 """Commands to analyse the results of the ``CifCleanWorkChains``."""
 import collections
 
-from aiida.cmdline.utils import echo
 import click
 import tabulate
+from aiida.cmdline.utils import echo
 
 from . import cmd_analyse
 
-DATABASES = ('cod', 'icsd', 'mpds')
+DATABASES = ("cod", "icsd", "mpds")
 
 
-@cmd_analyse.command('cif-clean')
+@cmd_analyse.command("cif-clean")
 @click.option(
-    '-d',
-    '--database',
+    "-d",
+    "--database",
     type=click.Choice(DATABASES),
-    help='Perform the analysis only for this database instead of for all.'
+    help="Perform the analysis only for this database instead of for all.",
 )
 @click.option(
-    '-f',
-    '--format',
-    'fmt',
-    type=click.Choice(['plain', 'latex']),
-    default='plain',
-    help='Format to use for printing the final table.'
+    "-f",
+    "--format",
+    "fmt",
+    type=click.Choice(["plain", "latex"]),
+    default="plain",
+    help="Format to use for printing the final table.",
 )
 @click.option(
-    '--filter-extras',
+    "--filter-extras",
     type=click.STRING,
     multiple=True,
-    help='Filter out `CifData` nodes that have these tags in their extras.'
+    help="Filter out `CifData` nodes that have these tags in their extras.",
 )
 def cmd_cif_clean(database, fmt, filter_extras):
     """Print table overview of the exit statuses of completed ``CifCleanWorkChains`` for the various databases."""
@@ -45,34 +45,44 @@ def cmd_cif_clean(database, fmt, filter_extras):
     counters = []
 
     for db in databases:
-        group_workchain_clean = orm.load_group(f'{db}/workchain/clean')
+        group_workchain_clean = orm.load_group(f"{db}/workchain/clean")
 
         builder = orm.QueryBuilder()
-        builder.append(orm.Group, filters={'label': group_workchain_clean.label}, tag='group')
-        builder.append(orm.WorkChainNode, project='attributes.exit_status', with_group='group', tag='wc')
+        builder.append(
+            orm.Group, filters={"label": group_workchain_clean.label}, tag="group"
+        )
+        builder.append(
+            orm.WorkChainNode,
+            project="attributes.exit_status",
+            with_group="group",
+            tag="wc",
+        )
 
         if filter_extras:
-            filters = {'extras': {'and': []}}
+            filters = {"extras": {"and": []}}
             for tag in filter_extras:
-                filters['extras']['and'].append({'!has_key': tag})
-            builder.append(orm.CifData, with_incoming='wc', filters=filters)
+                filters["extras"]["and"].append({"!has_key": tag})
+            builder.append(orm.CifData, with_incoming="wc", filters=filters)
 
         counter = collections.Counter(builder.all(flat=True))
         counters.append(counter)
 
     table = []
-    headers = ['Exit code', 'Description']
+    headers = ["Exit code", "Description"]
     headers.extend(databases)
 
-    exit_codes = sorted(set(exit_code for counter in counters for exit_code in counter.keys()))
+    exit_codes = sorted(
+        set(exit_code for counter in counters for exit_code in counter.keys())
+    )
 
     for exit_code in exit_codes:
-
         if exit_code:
-            message = WorkflowFactory('codtools.cif_clean').exit_codes(exit_code).message
+            message = (
+                WorkflowFactory("codtools.cif_clean").exit_codes(exit_code).message
+            )
             description = message[0].upper() + message[1:]
         else:
-            description = 'Success'
+            description = "Success"
 
         row = [exit_code, description]
         row.extend([counter.get(exit_code, 0) for counter in counters])
@@ -81,14 +91,14 @@ def cmd_cif_clean(database, fmt, filter_extras):
     echo.echo(tabulate.tabulate(table, headers=headers, tablefmt=fmt))
 
 
-@cmd_analyse.command('cif-clean-manual')
+@cmd_analyse.command("cif-clean-manual")
 @click.option(
-    '-f',
-    '--format',
-    'fmt',
-    type=click.Choice(['plain', 'latex']),
-    default='plain',
-    help='Format to use for printing the final table.'
+    "-f",
+    "--format",
+    "fmt",
+    type=click.Choice(["plain", "latex"]),
+    default="plain",
+    help="Format to use for printing the final table.",
 )
 def cmd_cif_clean_manual(fmt):
     """Print table with successfully completed workchains that had invalid ``CifData`` as input that went overlooked.
@@ -106,25 +116,35 @@ def cmd_cif_clean_manual(fmt):
     counters = []
 
     for db in DATABASES:
-
-        filters = {'extras': {'has_key': 'incorrect_formula'}}
+        filters = {"extras": {"has_key": "incorrect_formula"}}
 
         builder = orm.QueryBuilder()
-        builder.append(orm.Group, filters={'label': f'{db}/workchain/clean'}, tag='group')
-        builder.append(orm.WorkChainNode, with_group='group', tag='wc', filters={'attributes.exit_status': {'==': 0}})
-        builder.append(orm.CifData, with_incoming='wc', filters=filters, project='extras.incorrect_formula')
+        builder.append(
+            orm.Group, filters={"label": f"{db}/workchain/clean"}, tag="group"
+        )
+        builder.append(
+            orm.WorkChainNode,
+            with_group="group",
+            tag="wc",
+            filters={"attributes.exit_status": {"==": 0}},
+        )
+        builder.append(
+            orm.CifData,
+            with_incoming="wc",
+            filters=filters,
+            project="extras.incorrect_formula",
+        )
 
         counter = collections.Counter(builder.all(flat=True))
         counters.append(counter)
 
     table = []
-    headers = ['Error']
+    headers = ["Error"]
     headers.extend(DATABASES)
 
     keys = sorted(set(key for counter in counters for key in counter.keys()))
 
     for key in keys:
-
         row = [key]
         row.extend([counter.get(key) for counter in counters])
         table.append(row)

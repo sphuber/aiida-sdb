@@ -4,10 +4,9 @@
 from .. import cmd_root
 
 
-@cmd_root.group('data')
+@cmd_root.group("data")
 def cmd_data():
     """Commands to import, create and inspect data nodes."""
 
 
 # Import the sub commands to register them with the CLI
-from .structure import cmd_structure
