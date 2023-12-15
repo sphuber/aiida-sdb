@@ -21,11 +21,12 @@ classifiers = [
 keywords = ['aiida', 'workflows']
 requires-python = '>=3.8'
 dependencies = [
-    'aiida-core[atomic_tools]~=2.0.0b1',
+    'aiida-core[atomic_tools]~=2.3.0',
     'aiida-codtools~=3.0',
     'click~=8.0',
     'numpy',
     'scipy',
+    'typer[all]~=0.9'
 ]
 
 [project.urls]
@@ -42,6 +43,7 @@ dev = [
 
 [project.scripts]
 aiida-sdb = 'aiida_sdb.cli:cmd_root'
+mc3d = 'aiida_sdb.cli.main:app'
 
 [tool.flit.module]
 name = 'aiida_sdb'
